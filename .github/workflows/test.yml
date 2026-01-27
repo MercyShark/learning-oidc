@@ -21,7 +21,7 @@ jobs:
           echo "IMAGE_NAME=$ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/backend:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build Docker Image
-        run : docker build -t $IMAGE_NAME . 
+        run : docker build -t $IMAGE_NAME . +
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
