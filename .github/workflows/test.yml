@@ -5,19 +5,36 @@ on:
       - main
 env:
   ACCOUNT_ID: ${{ vars.ACCOUNT_ID }} 
-
+  IMAGE_NAME: ${{ vars.ACCOUNT_ID}}.dkr.ecr.ap-south-1.amazonaws.com/backend:latest
 permissions:
   id-token: write   # REQUIRED FOR OIDC
   contents: read
 
 jobs:
-  test-job:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      - name: Build Docker Image
+        run : docker build -t $IMAGE_NAME . 
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/roleformercyaccount
           aws-region: ap-south-1
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 \
+          | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Push Docker Image
+        run: | 
+          docker push $IMAGE_NAME
+
+        
+
+  
