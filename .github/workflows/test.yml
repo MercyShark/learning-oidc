@@ -3,15 +3,16 @@ on:
   push: 
     branches: 
       - main
-
+env:
+  ACCOUNT_ID: ${{ vars.ACCOUNT_ID }} 
 jobs:
   test-job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Run a one-line script
-        run: echo "Hello, World!"
-
-      - name: dir listing
-        run: ls -la
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/roleformercyaccount
+          aws-region: ap-south-1
