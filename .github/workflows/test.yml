@@ -5,6 +5,11 @@ on:
       - main
 env:
   ACCOUNT_ID: ${{ vars.ACCOUNT_ID }} 
+
+permissions:
+  id-token: write   # REQUIRED FOR OIDC
+  contents: read
+
 jobs:
   test-job:
     runs-on: ubuntu-latest
