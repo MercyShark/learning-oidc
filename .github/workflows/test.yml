@@ -5,7 +5,6 @@ on:
       - main
 env:
   ACCOUNT_ID: ${{ vars.ACCOUNT_ID }} 
-  IMAGE_NAME: ${{ vars.ACCOUNT_ID}}.dkr.ecr.ap-south-1.amazonaws.com/backend:${GITHUB_SHA::7}
 permissions:
   id-token: write   # REQUIRED FOR OIDC
   contents: read
@@ -17,6 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       
+      - name: Prepare IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/backend:${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Docker Image name
         run : echo $IMAGE_NAME
       # - name: Build Docker Image
