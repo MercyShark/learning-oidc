@@ -20,28 +20,43 @@ jobs:
         run: |
           echo "IMAGE_NAME=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/backend:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-      - name: Docker Image name
-        run : echo $IMAGE_NAME
-      # - name: Build Docker Image
-      #   run : docker build -t $IMAGE_NAME . 
+      - name: Build Docker Image
+        run : docker build -t $IMAGE_NAME . 
 
-      # - name: Configure AWS credentials (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/roleformercyaccount
-      #     aws-region: ap-south-1
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/roleformercyaccount
+          aws-region: ap-south-1
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 \
+          | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Push Docker Image
+        run: | 
+          docker push $IMAGE_NAME
+
+
+      - name: Get task definition
+        run : |
+          aws ecs describe-task-definition --task-definition apitask:1 --region ap-south-1 > task-def.json
+
+      - name: Change Image name
+        run : | 
+          jq --arg IMAGE "$IMAGE_NAME"    '.taskDefinition.containerDefinitions |= map(if .name=="myapitest" then .image=$IMAGE else . end)'    task-def.json > container-def.json
+
+      - name: Register Task
+        run : | 
+          aws ecs register-task-definition --cli-input-json file://container-def.json
+
+      - name: Verification
+        run : | 
+          jq '.taskDefinition.containerDefinitions[] | {name, image}' container-def.json
 
 
 
-
-      # - name: Login to ECR
-      #   run: |
-      #     aws ecr get-login-password --region ap-south-1 \
-      #     | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
-
-      # - name: Push Docker Image
-      #   run: | 
-      #     docker push $IMAGE_NAME
 
         
 
