@@ -6,7 +6,7 @@ on:
 env:
   ACCOUNT_ID: ${{ vars.ACCOUNT_ID }} 
 permissions:
-  id-token: write   # REQUIRED FOR OIDC
+  id-token: write   
   contents: read
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       
       - name: Prepare IMAGE_NAME
         run: |
-          echo "IMAGE_NAME=$ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/backend:latest" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/backend:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build Docker Image
         run : docker build -t $IMAGE_NAME . 
@@ -39,21 +39,21 @@ jobs:
           docker push $IMAGE_NAME
 
 
-      - name: Get task definition
-        run : |
-          aws ecs describe-task-definition --task-definition apitask:1 --region ap-south-1 > task-def.json
+      # - name: Get task definition
+      #   run : |
+      #     aws ecs describe-task-definition --task-definition apitask:1 --region ap-south-1 > task-def.json
 
-      - name: Change Image name
-        run : | 
-          jq --arg IMAGE "$IMAGE_NAME"    '.taskDefinition.containerDefinitions |= map(if .name=="myapitest" then .image=$IMAGE else . end)'    task-def.json > container-def.json
+      # - name: Change Image name
+      #   run : | 
+      #     jq --arg IMAGE "$IMAGE_NAME"    '.taskDefinition.containerDefinitions |= map(if .name=="myapitest" then .image=$IMAGE else . end)'    task-def.json > container-def.json
 
-      - name: Register Task
-        run : | 
-          aws ecs register-task-definition --cli-input-json file://container-def.json
+      # - name: Register Task
+      #   run : | 
+      #     aws ecs register-task-definition --cli-input-json file://container-def.json
 
-      - name: Verification
-        run : | 
-          jq '.taskDefinition.containerDefinitions[] | {name, image}' container-def.json
+      # - name: Verification
+      #   run : | 
+      #     jq '.taskDefinition.containerDefinitions[] | {name, image}' container-def.json
 
 
 
